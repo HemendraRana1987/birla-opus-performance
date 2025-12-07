@@ -41,7 +41,14 @@ smtp_password = 'azvp nyjw leel rtdt'
 sender_email = 'hemendra.rana@deptagency.com'
 
 # List of emails for report recipients
-recipients_birla = ['hariom.singh@deptagency.com']
+recipients_birla = ["hariom.singh@deptagency.com",
+    "bhumika.khunt@deptagency.com",
+    "shubham.rogye@deptagency.com",
+    "gaurang.kapadia@deptagency.com",
+    "shadab.sayed@deptagency.com",
+    "ashita.choudhury@deptagency.com",
+    "dhawal.mhatre@deptagency.com",
+    "monica.ledwani@deptagency.com"]
 
 # Define Sitemap URL
 birla_opus_sitemap_url = 'https://www.birlaopus.com/sitemap.xml'
@@ -500,7 +507,7 @@ if __name__ == '__main__':
         body += f"Execution time: {execution_time_minutes} minutes\n\n"
         body += f"Please feel free to review the attached report and let us know if you have any questions or concerns. "
         body += f"We appreciate your cooperation and support.\n\n"
-        body += f"Thanks & Regards,\nQ.A Automation Team,\n'Tekno Point Multimedia Pvt Ltd'."
+        body += f"Thanks & Regards,\nQ.A Automation Team,\n'DEPT®'."
 
         send_email(subject, body, recipients_birla, zip_file_path)
 
