@@ -41,7 +41,12 @@ smtp_password = 'azvp nyjw leel rtdt'
 sender_email = 'hemendra.rana@deptagency.com'
 
 # List of emails for report recipients
-recipients_birla = ["hariom.singh@deptagency.com",
+recipients_birla = ["hariom.singh@deptagency.com", "anand.tigga@adityabirla.com",
+    "avishek.kumar@adityabirla.com",
+    "ramandeep.singh@adityabirla.com",
+    "Aastha.narula@adityabirla.com",
+    "Juhi.Parmar@adityabirla.com",
+    "surbhi.gupta@adityabirla.com",
     "bhumika.khunt@deptagency.com",
     "shubham.rogye@deptagency.com",
     "gaurang.kapadia@deptagency.com",
@@ -49,6 +54,7 @@ recipients_birla = ["hariom.singh@deptagency.com",
     "ashita.choudhury@deptagency.com",
     "dhawal.mhatre@deptagency.com",
     "monica.ledwani@deptagency.com"]
+
 
 # Define Sitemap URL
 birla_opus_sitemap_url = 'https://www.birlaopus.com/sitemap.xml'
