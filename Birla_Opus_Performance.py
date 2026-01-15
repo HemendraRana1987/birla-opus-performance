@@ -55,7 +55,6 @@ recipients_birla = ["hariom.singh@deptagency.com", "anand.tigga@adityabirla.com"
     "dhawal.mhatre@deptagency.com",
     "monica.ledwani@deptagency.com"]
 
-
 # Define Sitemap URL
 birla_opus_sitemap_url = 'https://www.birlaopus.com/sitemap.xml'
 
@@ -63,6 +62,96 @@ birla_opus_sitemap_url = 'https://www.birlaopus.com/sitemap.xml'
 timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
 date_string = datetime.now().strftime('%d-%b-%Y %I:%M %p')
 output_dir_birla = f'birla_opus_performance_reports_{timestamp}'
+
+# --- URL FILTERING FUNCTION ---
+def filter_urls_ending_with_slash(urls):
+    """
+    Filter URLs to only include:
+    1. Root domain URL (0 segments): https://www.birlaopus.com/
+    2. Single-segment path URLs (1 segment): https://www.birlaopus.com/colour-catalogue/
+    
+    Excludes URLs with multiple path segments like:
+    - https://www.birlaopus.com/colour-catalogue/something-else/
+    - https://www.birlaopus.com/products/doors/interior/
+    """
+    from urllib.parse import urlparse
+    
+    filtered_urls = []
+    zero_segment_count = 0
+    one_segment_count = 0
+    skipped_count = 0
+    
+    print("\n=== URL FILTERING DEBUG ===")
+    
+    for url in urls:
+        parsed = urlparse(url)
+        path = parsed.path
+        
+        # Skip non-HTML files (images, PDFs, etc.)
+        non_html_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.pdf', '.xml', '.css', '.js', '.svg', '.webp', '.ico', '.zip', '.mp4', '.mp3', '.avi', '.mov']
+        if any(path.lower().endswith(ext) for ext in non_html_extensions):
+            skipped_count += 1
+            continue
+        
+        # Skip URLs with query parameters or fragments
+        if parsed.query or parsed.fragment:
+            skipped_count += 1
+            continue
+        
+        # Clean the path - remove trailing slash if exists
+        clean_path = path.rstrip('/')
+        
+        # Split into segments
+        segments = [segment for segment in clean_path.split('/') if segment]
+        
+        if len(segments) == 0:
+            # Root domain - add trailing slash for consistency
+            normalized_url = f"{parsed.scheme}://{parsed.netloc}/"
+            filtered_urls.append(normalized_url)
+            zero_segment_count += 1
+            print(f"  ✓ [0 segments - ROOT] {url} -> normalized to: {normalized_url}")
+        elif len(segments) == 1:
+            # Single segment - add trailing slash for consistency
+            normalized_url = f"{parsed.scheme}://{parsed.netloc}/{segments[0]}/"
+            filtered_urls.append(normalized_url)
+            one_segment_count += 1
+            print(f"  ✓ [1 segment] {url} -> path: '{path}', segments: {segments}, normalized to: {normalized_url}")
+        else:
+            # 2+ segments - skip
+            skipped_count += 1
+            print(f"  ✗ [2+ segments] {url} -> path: '{path}', segments: {segments} (has {len(segments)} segments)")
+    
+    print(f"\n=== FILTERING SUMMARY ===")
+    print(f"0 segments (root): {zero_segment_count}")
+    print(f"1 segment: {one_segment_count}")
+    print(f"2+ segments (skipped): {skipped_count}")
+    print(f"Total filtered: {len(filtered_urls)} out of {len(urls)} URLs\n")
+    
+    return filtered_urls
+
+# --- DEBUG FUNCTION ---
+def debug_sitemap_urls(urls):
+    """Debug function to see what URLs we're getting from sitemap"""
+    print(f"\n=== SITEMAP URL SAMPLES (first 20) ===")
+    for i, url in enumerate(urls[:20]):
+        parsed = urlparse(url)
+        clean_path = parsed.path.rstrip('/')
+        segments = [s for s in clean_path.split('/') if s]
+        print(f"{i+1:2d}. {url}")
+        print(f"     Path: '{parsed.path}' | Segments: {segments} ({len(segments)} segments)")
+    
+    print(f"\n=== URL ANALYSIS ===")
+    url_types = {}
+    for url in urls:
+        parsed = urlparse(url)
+        clean_path = parsed.path.rstrip('/')
+        segments = [s for s in clean_path.split('/') if s]
+        seg_count = len(segments)
+        url_types[seg_count] = url_types.get(seg_count, 0) + 1
+    
+    print(f"Segment distribution:")
+    for seg_count in sorted(url_types.keys()):
+        print(f"  {seg_count} segment(s): {url_types[seg_count]} URLs")
 
 # --- EMAIL FUNCTION ---
 def send_email(subject, message, recipients, attachment_path):
@@ -296,12 +385,22 @@ def categorize_load_time(load_time):
 # --- REPORT GENERATION FUNCTIONS ---
 def process_urls_from_sitemap(sitemap_url, project_name):
     """
-    Fetches URLs from the sitemap and processes them concurrently.
+    Fetches URLs from the sitemap, filters them, and processes them concurrently.
     """
-    urls = get_urls_from_sitemap(sitemap_url)
+    all_urls = get_urls_from_sitemap(sitemap_url)
+
+    if not all_urls:
+        print(f"No URLs found to process from sitemap: {sitemap_url}")
+        return []
+
+    # Debug: Show what we got from sitemap
+    debug_sitemap_urls(all_urls)
+
+    # Filter URLs
+    urls = filter_urls_ending_with_slash(all_urls)
 
     if not urls:
-        print(f"No URLs found to process from sitemap: {sitemap_url}")
+        print(f"No URLs ending with '/' found in sitemap: {sitemap_url}")
         return []
 
     try:
@@ -503,6 +602,8 @@ if __name__ == '__main__':
         body += f"Kindly review the outcomes of a recent performance assessment for the website, "
         body += f"sourcing URLs directly from the sitemap: {birla_opus_sitemap_url}.\n\n"
         body += f"Report Generated: {date_string}\n\n"
+        body += f"Note: This report only includes URLs with 0 or 1 path segment ending with '/'.\n"
+        body += f"Examples: https://www.birlaopus.com/ and https://www.birlaopus.com/colour-catalogue/\n\n"
         body += f"Here is a summary of the findings:\n"
         body += f"Total URLs analyzed: {total_urls}\n\n"
         body += f"Page Load Time Summary:\n"
